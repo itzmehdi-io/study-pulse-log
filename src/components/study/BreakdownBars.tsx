@@ -6,7 +6,7 @@ export function BreakdownBars({
   rows,
   emptyLabel = "No study time logged yet today.",
 }: {
-  rows: { timerId: string; total: number; timer?: Timer }[];
+  rows: { timerId: string; total: number; timer?: Timer | undefined }[];
   emptyLabel?: string;
 }) {
   const max = rows.reduce((a, r) => Math.max(a, r.total), 0);
