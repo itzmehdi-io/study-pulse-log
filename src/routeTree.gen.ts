@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as FocusRouteImport } from './routes/focus'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatisticsRouteImport } from './routes/statistics'
 import { Route as TimersIndexRouteImport } from './routes/timers.index'
 import { Route as TimersTimerIdRouteImport } from './routes/timers.$timerId'
@@ -29,6 +30,11 @@ const CalendarRoute = CalendarRouteImport.update({
 const FocusRoute = FocusRouteImport.update({
   id: '/focus',
   path: '/focus',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatisticsRoute = StatisticsRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/focus': typeof FocusRoute
+  '/settings': typeof SettingsRoute
   '/statistics': typeof StatisticsRoute
   '/timers/$timerId': typeof TimersTimerIdRoute
   '/timers/': typeof TimersIndexRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/focus': typeof FocusRoute
+  '/settings': typeof SettingsRoute
   '/statistics': typeof StatisticsRoute
   '/timers/$timerId': typeof TimersTimerIdRoute
   '/timers': typeof TimersIndexRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/focus': typeof FocusRoute
+  '/settings': typeof SettingsRoute
   '/statistics': typeof StatisticsRoute
   '/timers/$timerId': typeof TimersTimerIdRoute
   '/timers/': typeof TimersIndexRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/focus'
+    | '/settings'
     | '/statistics'
     | '/timers/$timerId'
     | '/timers/'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/focus'
+    | '/settings'
     | '/statistics'
     | '/timers/$timerId'
     | '/timers'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/focus'
+    | '/settings'
     | '/statistics'
     | '/timers/$timerId'
     | '/timers/'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CalendarRoute: typeof CalendarRoute
   FocusRoute: typeof FocusRoute
+  SettingsRoute: typeof SettingsRoute
   StatisticsRoute: typeof StatisticsRoute
   TimersTimerIdRoute: typeof TimersTimerIdRoute
   TimersIndexRoute: typeof TimersIndexRoute
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/focus'
       fullPath: '/focus'
       preLoaderRoute: typeof FocusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/statistics': {
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarRoute: CalendarRoute,
   FocusRoute: FocusRoute,
+  SettingsRoute: SettingsRoute,
   StatisticsRoute: StatisticsRoute,
   TimersTimerIdRoute: TimersTimerIdRoute,
   TimersIndexRoute: TimersIndexRoute,
