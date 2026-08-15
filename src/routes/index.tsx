@@ -5,7 +5,6 @@ import { toast } from "sonner";
 
 import { BreakdownBars } from "@/components/study/BreakdownBars";
 import { GoalRing } from "@/components/study/GoalRing";
-import { Onboarding } from "@/components/study/Onboarding";
 import { TimerCard } from "@/components/study/TimerCard";
 import { TimerDialog } from "@/components/study/TimerDialog";
 import { TodayDrawer } from "@/components/study/TodayDrawer";
@@ -69,8 +68,6 @@ function Dashboard() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8">
-      <Onboarding />
-
       <section className="panel lamp-glow relative overflow-hidden p-6 md:p-8">
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div>
