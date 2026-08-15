@@ -32,7 +32,7 @@ export function Onboarding() {
 
   return (
     <Dialog open={open} onOpenChange={() => updateSettings({ onboarded: true })}>
-      <DialogContent showCloseButton={false} className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <div className="lamp-glow -m-6 mb-0 rounded-t-xl px-6 pt-8">
           <span className="grid size-11 place-items-center rounded-xl bg-primary/15 text-primary">
             <Focus className="size-5" />
