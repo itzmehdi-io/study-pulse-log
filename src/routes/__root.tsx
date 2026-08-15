@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -11,6 +12,10 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AppShell } from "@/components/study/AppShell";
+import { Onboarding } from "@/components/study/Onboarding";
+import { Toaster } from "@/components/ui/sonner";
+import { StudyProvider, useStudy } from "@/lib/study/store";
 
 function NotFoundComponent() {
   return (
@@ -77,14 +82,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Focus Studio — Study timer & productivity tracker" },
+      {
+        name: "description",
+        content:
+          "Track study time per subject with accurate timers, daily goals, streaks and detailed statistics.",
+      },
+      { property: "og:title", content: "Focus Studio — Study timer & productivity tracker" },
+      {
+        property: "og:description",
+        content: "Accurate per-subject study timers, daily goals, streaks and rich statistics.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -102,7 +112,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
@@ -119,8 +129,49 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <StudyProvider>
+        <ThemeSync />
+        <Layout />
+        <Onboarding />
+        <Toaster position="top-center" />
+      </StudyProvider>
     </QueryClientProvider>
+  );
+}
+
+function ThemeSync() {
+  const { settings } = useStudy();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const apply = () => {
+      const prefersDark =
+        settings.theme === "system"
+          ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          : settings.theme === "dark";
+      root.classList.toggle("dark", prefersDark);
+    };
+    apply();
+    if (settings.theme !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [settings.theme]);
+
+  return null;
+}
+
+function Layout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  if (pathname.startsWith("/focus")) {
+    return <Outlet />;
+  }
+
+  return (
+    <AppShell>
+      {/* Required: nested routes render here. */}
+      <Outlet />
+    </AppShell>
   );
 }
