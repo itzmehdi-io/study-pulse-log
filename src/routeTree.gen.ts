@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimersIndexRouteImport } from './routes/timers.index'
+import { Route as TimersTimerIdRouteImport } from './routes/timers.$timerId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,30 +23,39 @@ const TimersIndexRoute = TimersIndexRouteImport.update({
   path: '/timers/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TimersTimerIdRoute = TimersTimerIdRouteImport.update({
+  id: '/timers/$timerId',
+  path: '/timers/$timerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/timers/$timerId': typeof TimersTimerIdRoute
   '/timers/': typeof TimersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/timers/$timerId': typeof TimersTimerIdRoute
   '/timers': typeof TimersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/timers/$timerId': typeof TimersTimerIdRoute
   '/timers/': typeof TimersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/timers/'
+  fullPaths: '/' | '/timers/$timerId' | '/timers/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/timers'
-  id: '__root__' | '/' | '/timers/'
+  to: '/' | '/timers/$timerId' | '/timers'
+  id: '__root__' | '/' | '/timers/$timerId' | '/timers/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TimersTimerIdRoute: typeof TimersTimerIdRoute
   TimersIndexRoute: typeof TimersIndexRoute
 }
 
@@ -65,11 +75,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/timers/$timerId': {
+      id: '/timers/$timerId'
+      path: '/timers/$timerId'
+      fullPath: '/timers/$timerId'
+      preLoaderRoute: typeof TimersTimerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TimersTimerIdRoute: TimersTimerIdRoute,
   TimersIndexRoute: TimersIndexRoute,
 }
 export const routeTree = rootRouteImport
