@@ -41,7 +41,7 @@ const MOBILE_NAV = [
 function useThemeSync() {
   const { settings, hydrated } = useStudy();
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated) return undefined;
     const root = document.documentElement;
     const apply = (mode: "dark" | "light") => {
       root.classList.toggle("light", mode === "light");
@@ -55,6 +55,7 @@ function useThemeSync() {
       return () => mq.removeEventListener("change", handler);
     }
     apply(settings.theme);
+    return undefined;
   }, [settings.theme, hydrated]);
 }
 
