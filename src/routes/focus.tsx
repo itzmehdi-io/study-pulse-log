@@ -14,7 +14,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { dateKey, formatClock, formatDuration } from "@/lib/study/format";
+import { useI18n } from "@/lib/i18n/provider";
+import { dateKey, formatClock } from "@/lib/study/format";
 import { sumDuration } from "@/lib/study/stats";
 import { useStudy } from "@/lib/study/store";
 import { useGlobalShortcuts } from "@/lib/study/useShortcuts";
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/focus")({
 
 function FocusPage() {
   useGlobalShortcuts();
+  const { t, n, formatDur } = useI18n();
   const { timers, activeTimerId, elapsedOf, statusOf, startTimer, pauseTimer, resetTimer, allSessions, settings } =
     useStudy();
   const [resetOpen, setResetOpen] = useState(false);
@@ -56,9 +58,9 @@ function FocusPage() {
   if (!timer) {
     return (
       <FocusFrame>
-        <p className="text-sm text-muted-foreground">No timers yet.</p>
+        <p className="text-sm text-muted-foreground">{t("focus.noTimers")}</p>
         <Button asChild className="mt-4">
-          <Link to="/timers">Create a timer</Link>
+          <Link to="/timers">{t("focus.createTimer")}</Link>
         </Button>
       </FocusFrame>
     );
@@ -89,21 +91,25 @@ function FocusPage() {
         </div>
 
         <p className="num text-[18vw] font-semibold leading-none tracking-tight sm:text-8xl md:text-[7rem]">
-          {formatClock(elapsed)}
+          {n(formatClock(elapsed))}
         </p>
 
         <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
-          {running ? <span className="text-primary">● Running</span> : statusOf(timer.id)}
+          {running ? (
+            <span className="text-primary">● {t("status.running")}</span>
+          ) : (
+            t(`status.${statusOf(timer.id)}` as never)
+          )}
         </p>
 
         <div className="flex items-center gap-3">
           {running ? (
             <Button size="lg" variant="secondary" onClick={() => pauseTimer(timer.id)}>
-              <Pause className="size-4" /> Pause
+              <Pause className="size-4" /> {t("action.pause")}
             </Button>
           ) : (
             <Button size="lg" onClick={() => startTimer(timer.id)}>
-              <Play className="size-4" /> {statusOf(timer.id) === "paused" ? "Resume" : "Start"}
+              <Play className="size-4" /> {statusOf(timer.id) === "paused" ? t("action.resume") : t("action.start")}
             </Button>
           )}
           <Button
@@ -112,12 +118,13 @@ function FocusPage() {
             disabled={elapsed === 0}
             onClick={() => (settings.confirmReset ? setResetOpen(true) : resetTimer(timer.id))}
           >
-            <RotateCcw className="size-4" /> Reset
+            <RotateCcw className="size-4" /> {t("action.reset")}
           </Button>
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Today <span className="num text-foreground">{formatDuration(todayTotal)}</span>
+          {t("action.today")}{" "}
+          <span className="num text-foreground">{formatDur(todayTotal)}</span>
         </p>
 
         {candidates.length > 1 ? (
@@ -142,18 +149,18 @@ function FocusPage() {
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset “{timer.name}”?</AlertDialogTitle>
+            <AlertDialogTitle>{`${t("action.reset")} «${timer.name}»؟`}</AlertDialogTitle>
             <AlertDialogDescription>
-              This resets the current session to 00:00. Recorded history is kept.
+              {t("focus.resetBody")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("action.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => resetTimer(timer.id)}
             >
-              Reset timer
+              {t("focus.resetAction")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -187,7 +194,7 @@ function FocusFrame({
         className="absolute right-4 top-4 text-muted-foreground"
       >
         <Link to="/">
-          <X className="size-4" /> Exit focus
+          <X className="size-4" /> {t("focus.exit")}
         </Link>
       </Button>
       <div className="relative">{children}</div>
