@@ -1,6 +1,6 @@
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
-import { formatDuration } from "@/lib/study/format";
+import { useI18n } from "@/lib/i18n/provider";
 
 export function WeekChart({
   data,
@@ -9,10 +9,11 @@ export function WeekChart({
   data: { label: string; key: string; total: number }[];
   goalMs?: number;
 }) {
+  const { t, formatDur } = useI18n();
   if (!data.some((d) => d.total > 0)) {
     return (
       <div className="flex h-52 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
-        No sessions in this range yet.
+        {t("chart.empty")}
       </div>
     );
   }
@@ -37,7 +38,7 @@ export function WeekChart({
               color: "var(--popover-foreground)",
               fontSize: 12,
             }}
-            formatter={(value: number) => [formatDuration(value), "Studied"]}
+            formatter={(value: number) => [formatDur(value), t("chart.studied")]}
           />
           <Bar dataKey="total" radius={[6, 6, 4, 4]} maxBarSize={44}>
             {data.map((entry) => (

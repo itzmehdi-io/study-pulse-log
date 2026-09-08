@@ -7,15 +7,9 @@ import { Heatmap } from "@/components/study/Heatmap";
 import { TodayDrawer } from "@/components/study/TodayDrawer";
 import { WeekChart } from "@/components/study/WeekChart";
 import { Button } from "@/components/ui/button";
-import {
-  addDays,
-  dateKey,
-  formatDayLong,
-  formatDuration,
-  formatTimeOfDay,
-  goalLabel,
-  startOfWeek,
-} from "@/lib/study/format";
+import { fromJalali, jalaliMonthLength, toJalali } from "@/lib/i18n/jalali";
+import { useI18n } from "@/lib/i18n/provider";
+import { addDays, dateKey, keyToDate, startOfWeek } from "@/lib/study/format";
 import { byTimer, dailyTotals, goalCompletionRate, sessionsOnDay, sumDuration } from "@/lib/study/stats";
 import { useStudy } from "@/lib/study/store";
 
@@ -40,6 +34,7 @@ export const Route = createFileRoute("/calendar")({
 
 function CalendarPage() {
   const { allSessions, timers, settings } = useStudy();
+  const { t, n, lang, formatTime, formatDur, goalText, formatDate, weekdayShort, weekStartsOn } = useI18n();
   const [monthOffset, setMonthOffset] = useState(0);
   const [weekOffset, setWeekOffset] = useState(0);
   const [selected, setSelected] = useState<string>(dateKey(new Date()));
@@ -47,15 +42,26 @@ function CalendarPage() {
 
   const goalMs = settings.dailyGoalMinutes * 60_000;
   const base = new Date();
-  const monthStart = new Date(base.getFullYear(), base.getMonth() + monthOffset, 1);
-  const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+  let monthStart: Date;
+  let daysInMonth: number;
+  if (lang === "fa") {
+    const j = toJalali(base);
+    const total = (j.jy * 12 + (j.jm - 1)) + monthOffset;
+    const jy = Math.floor(total / 12);
+    const jm = (total % 12) + 1;
+    monthStart = fromJalali(jy, jm, 1);
+    daysInMonth = jalaliMonthLength(jy, jm);
+  } else {
+    monthStart = new Date(base.getFullYear(), base.getMonth() + monthOffset, 1);
+    daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+  }
   const monthDays = dailyTotals(allSessions, monthStart, daysInMonth);
   const monthTotal = monthDays.reduce((a, d) => a + d.total, 0);
 
-  const weekStart = addDays(startOfWeek(new Date()), weekOffset * 7);
+  const weekStart = addDays(startOfWeek(new Date(), weekStartsOn), weekOffset * 7);
   const week = dailyTotals(allSessions, weekStart, 7).map((d) => ({
     ...d,
-    label: d.date.toLocaleDateString(undefined, { weekday: "short" }),
+    label: weekdayShort(d.date),
   }));
   const weekTotal = week.reduce((a, d) => a + d.total, 0);
   const bestDay = week.reduce((a, b) => (b.total > a.total ? b : a), week[0]!);
@@ -70,9 +76,9 @@ function CalendarPage() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Calendar</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("nav.calendar")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Every day you studied, at a glance. Click a day for its full session list.
+          {t("cal.subtitle")}
         </p>
       </header>
 
@@ -81,10 +87,10 @@ function CalendarPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold tracking-tight">
-                {monthStart.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+                {formatDate(monthStart, "monthYear")}
               </h2>
               <p className="num mt-0.5 text-xs text-muted-foreground">
-                {formatDuration(monthTotal)} total
+                {formatDur(monthTotal)} {t("cal.monthTotal")}
               </p>
             </div>
             <div className="flex gap-1">
@@ -107,27 +113,27 @@ function CalendarPage() {
         <section className="panel space-y-6 p-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-base font-semibold tracking-tight">{formatDayLong(selected)}</h2>
-              <p className="num mt-1 text-3xl font-semibold">{formatDuration(dayTotal)}</p>
+              <h2 className="text-base font-semibold tracking-tight">{formatDate(keyToDate(selected), "long")}</h2>
+              <p className="num mt-1 text-3xl font-semibold">{formatDur(dayTotal)}</p>
             </div>
             <Button variant="secondary" size="sm" onClick={() => setDrawerOpen(true)}>
-              Session timeline
+              {t("cal.timeline")}
             </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Mini label="Sessions" value={String(daySessions.length)} />
-            <Mini label="Longest" value={longest ? formatDuration(longest) : "—"} />
-            <Mini label="First" value={first ? formatTimeOfDay(first.startedAt) : "—"} />
-            <Mini label="Last" value={last ? formatTimeOfDay(last.endedAt) : "—"} />
+            <Mini label={t("label.sessions")} value={n(daySessions.length)} />
+            <Mini label={t("label.longestSession")} value={longest ? formatDur(longest) : "—"} />
+            <Mini label={t("cal.first")} value={first ? formatTime(first.startedAt) : "—"} />
+            <Mini label={t("cal.last")} value={last ? formatTime(last.endedAt) : "—"} />
           </div>
 
           <div>
             <p className="mb-3 text-xs text-muted-foreground">
-              Goal {goalLabel(settings.dailyGoalMinutes)} ·{" "}
-              {goalMs ? Math.round((dayTotal / goalMs) * 100) : 0}% complete
+              {t("cal.goal")} {goalText(settings.dailyGoalMinutes)} ·{" "}
+              {n(goalMs ? Math.round((dayTotal / goalMs) * 100) : 0)}% {t("cal.complete")}
             </p>
-            <BreakdownBars rows={dayBreakdown} emptyLabel="No sessions recorded on this day." />
+            <BreakdownBars rows={dayBreakdown} emptyLabel={t("cal.emptyDay")} />
           </div>
         </section>
       </div>
@@ -136,17 +142,23 @@ function CalendarPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold tracking-tight">
-              {weekOffset === 0 ? "This week" : weekOffset === -1 ? "Last week" : "Week of " + weekStart.toLocaleDateString()}
+              {weekOffset === 0
+                ? t("label.thisWeek")
+                : weekOffset === -1
+                  ? t("label.lastWeek")
+                  : `${t("cal.weekOf")} ${formatDate(weekStart, "short")}`}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              Total <span className="num text-foreground">{formatDuration(weekTotal)}</span> ·
-              Average{" "}
-              <span className="num text-foreground">{formatDuration(weekTotal / 7)}</span>/day ·
-              Best day{" "}
+              {t("label.total")}{" "}
+              <span className="num text-foreground">{formatDur(weekTotal)}</span> ·{" "}
+              {t("label.average")}{" "}
+              <span className="num text-foreground">{formatDur(weekTotal / 7)}</span>{" "}
+              {t("cal.perDay")} · {t("label.bestDay")}{" "}
               <span className="text-foreground">
-                {bestDay.total ? `${bestDay.label} (${formatDuration(bestDay.total)})` : "—"}
+                {bestDay.total ? `${bestDay.label} (${formatDur(bestDay.total)})` : "—"}
               </span>{" "}
-              · Goal met {goalCompletionRate(week, settings.dailyGoalMinutes)}% of days
+              · {t("cal.goalMet")} {n(goalCompletionRate(week, settings.dailyGoalMinutes))}
+              {t("cal.ofDays")}
             </p>
           </div>
           <div className="flex gap-1">
@@ -171,8 +183,8 @@ function CalendarPage() {
         onOpenChange={setDrawerOpen}
         sessions={daySessions}
         timers={timers}
-        title={formatDayLong(selected)}
-        subtitle="Chronological sessions for this day."
+        title={formatDate(keyToDate(selected), "long")}
+        subtitle={t("cal.daySubtitle")}
       />
     </div>
   );

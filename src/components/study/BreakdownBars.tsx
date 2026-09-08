@@ -1,18 +1,19 @@
 import { TimerIcon } from "@/components/study/TimerIcon";
-import { formatDuration } from "@/lib/study/format";
+import { useI18n } from "@/lib/i18n/provider";
 import type { Timer } from "@/lib/study/types";
 
 export function BreakdownBars({
   rows,
-  emptyLabel = "No study time logged yet today.",
+  emptyLabel,
 }: {
   rows: { timerId: string; total: number; timer?: Timer | undefined }[];
   emptyLabel?: string;
 }) {
+  const { t, formatDur } = useI18n();
   const max = rows.reduce((a, r) => Math.max(a, r.total), 0);
 
   if (!rows.length) {
-    return <p className="text-sm text-muted-foreground">{emptyLabel}</p>;
+    return <p className="text-sm text-muted-foreground">{emptyLabel ?? t("breakdown.empty")}</p>;
   }
 
   return (
@@ -29,10 +30,10 @@ export function BreakdownBars({
                   className="size-4 shrink-0"
                   // eslint-disable-next-line react/forbid-dom-props
                 />
-                <span className="truncate font-medium">{row.timer?.name ?? "Deleted timer"}</span>
+                <span className="truncate font-medium">{row.timer?.name ?? t("timer.deleted.name")}</span>
               </span>
               <span className="num shrink-0 text-muted-foreground">
-                {formatDuration(row.total)}
+                {formatDur(row.total)}
               </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">

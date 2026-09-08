@@ -14,13 +14,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { ACCENT_COLORS, TIMER_ICONS, type Timer } from "@/lib/study/types";
+import { useI18n } from "@/lib/i18n/provider";
+import {
+  ACCENT_COLORS,
+  TIMER_ICONS,
+  TIMER_TYPES,
+  type Timer,
+  type TimerType,
+} from "@/lib/study/types";
 
 export interface TimerDraft {
   name: string;
   description: string;
   icon: string;
   accentColor: string;
+  type: TimerType;
 }
 
 export function TimerDialog({
@@ -34,11 +42,13 @@ export function TimerDialog({
   timer?: Timer | null;
   onSubmit: (draft: TimerDraft) => void;
 }) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState<TimerDraft>({
     name: "",
     description: "",
     icon: TIMER_ICONS[0],
     accentColor: ACCENT_COLORS[0]!.value,
+    type: "study",
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +60,7 @@ export function TimerDialog({
       description: timer?.description ?? "",
       icon: timer?.icon ?? TIMER_ICONS[0],
       accentColor: timer?.accentColor ?? ACCENT_COLORS[0]!.value,
+      type: timer?.type ?? "study",
     });
   }, [open, timer]);
 
@@ -99,6 +110,25 @@ export function TimerDialog({
               value={draft.description}
               onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t("timer.type")}</Label>
+            <div className="flex flex-wrap gap-2">
+              {TIMER_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setDraft((d) => ({ ...d, type }))}
+                  className={cn(
+                    "rounded-full border border-border bg-elevated px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground",
+                    draft.type === type && "border-primary/60 bg-primary/10 text-primary",
+                  )}
+                >
+                  {t(`type.${type}` as never)}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">

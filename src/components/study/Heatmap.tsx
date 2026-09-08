@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import { dateKey, formatDayShort, formatDuration } from "@/lib/study/format";
+import { useI18n } from "@/lib/i18n/provider";
+import { dateKey, keyToDate } from "@/lib/study/format";
 
 export function intensityClass(total: number, goalMs: number) {
   if (total <= 0) return "bg-muted/60";
@@ -21,13 +22,20 @@ export function Heatmap({
   selected?: string;
   onSelect?: (key: string) => void;
 }) {
+  const { t, formatDur, formatDate, weekdayShort, weekStartsOn } = useI18n();
   const todayKey = dateKey(new Date());
-  const leadingBlanks = days.length ? (days[0]!.date.getDay() + 6) % 7 : 0;
+  const leadingBlanks = days.length
+    ? (days[0]!.date.getDay() - weekStartsOn + 7) % 7
+    : 0;
+  const headers = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(2024, 0, 7 + weekStartsOn + i); // Jan 7 2024 is a Sunday
+    return weekdayShort(d);
+  });
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-7 gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+        {headers.map((d, i) => (
           <span key={i} className="text-center">
             {d}
           </span>
@@ -42,7 +50,7 @@ export function Heatmap({
             key={day.key}
             type="button"
             onClick={() => onSelect?.(day.key)}
-            title={`${formatDayShort(day.key)} — ${day.total ? formatDuration(day.total) : "no study"}`}
+            title={`${formatDate(keyToDate(day.key), "short")} — ${day.total ? formatDur(day.total) : t("heat.noStudy")}`}
             className={cn(
               "group relative aspect-square rounded-md transition-all duration-200 hover:scale-[1.08] hover:ring-2 hover:ring-ring/60",
               intensityClass(day.total, goalMs),
@@ -55,13 +63,13 @@ export function Heatmap({
         ))}
       </div>
       <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
-        <span>Less</span>
+        <span>{t("heat.less")}</span>
         {["bg-muted/60", "bg-primary/25", "bg-primary/45", "bg-primary/70", "bg-primary"].map(
           (c) => (
             <span key={c} className={cn("size-3 rounded-sm", c)} />
           ),
         )}
-        <span>More</span>
+        <span>{t("heat.more")}</span>
       </div>
     </div>
   );

@@ -33,7 +33,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { dateKey, formatClock, formatDuration } from "@/lib/study/format";
+import { useI18n } from "@/lib/i18n/provider";
+import { dateKey, formatClock } from "@/lib/study/format";
 import { useStudy } from "@/lib/study/store";
 import { sumDuration } from "@/lib/study/stats";
 import type { Timer } from "@/lib/study/types";
@@ -41,6 +42,7 @@ import { cn } from "@/lib/utils";
 
 export function TimerCard({ timer }: { timer: Timer }) {
   const store = useStudy();
+  const { t, n, formatDur, formatDate } = useI18n();
   const {
     elapsedOf,
     statusOf,
@@ -75,8 +77,8 @@ export function TimerCard({ timer }: { timer: Timer }) {
       if (settings.autoPauseOthers) {
         setSwitchOpen(true);
       } else {
-        toast.error("Another timer is running", {
-          description: "Pause it first, or enable automatic switching in Settings.",
+        toast.error(t("timer.anotherRunning"), {
+          description: t("timer.anotherRunningDesc"),
         });
       }
       return;
@@ -89,7 +91,7 @@ export function TimerCard({ timer }: { timer: Timer }) {
     else resetTimer(timer.id);
   };
 
-  const activeName = store.timers.find((t) => t.id === activeTimerId)?.name ?? "A timer";
+  const activeName = store.timers.find((x) => x.id === activeTimerId)?.name ?? "";
 
   return (
     <>
@@ -136,30 +138,30 @@ export function TimerCard({ timer }: { timer: Timer }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="size-8 text-muted-foreground">
                 <MoreHorizontal className="size-4" />
-                <span className="sr-only">Timer options</span>
+                <span className="sr-only">{t("timer.options")}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                <Pencil className="size-4" /> Edit
+                <Pencil className="size-4" /> {t("action.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/timers/$timerId" params={{ timerId: timer.id }}>
-                  <BarChart3 className="size-4" /> Timer history
+                  <BarChart3 className="size-4" /> {t("timer.history")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleReset}>
-                <RotateCcw className="size-4" /> Reset session
+                <RotateCcw className="size-4" /> {t("timer.resetSession")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => archiveTimer(timer.id, !timer.archived)}>
                 {timer.archived ? (
                   <>
-                    <ArchiveRestore className="size-4" /> Restore
+                    <ArchiveRestore className="size-4" /> {t("timer.restore")}
                   </>
                 ) : (
                   <>
-                    <Archive className="size-4" /> Archive
+                    <Archive className="size-4" /> {t("action.archive")}
                   </>
                 )}
               </DropdownMenuItem>
@@ -167,7 +169,7 @@ export function TimerCard({ timer }: { timer: Timer }) {
                 className="text-destructive focus:text-destructive"
                 onClick={() => (settings.confirmDelete ? setDeleteOpen(true) : deleteTimer(timer.id, false))}
               >
-                <Trash2 className="size-4" /> Delete
+                <Trash2 className="size-4" /> {t("action.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -180,7 +182,7 @@ export function TimerCard({ timer }: { timer: Timer }) {
               running ? "text-foreground" : "text-foreground/80",
             )}
           >
-            {formatClock(elapsed)}
+            {n(formatClock(elapsed))}
           </p>
           <div className="mt-2 flex items-center gap-2 text-[11px] uppercase tracking-widest">
             <span
@@ -195,11 +197,11 @@ export function TimerCard({ timer }: { timer: Timer }) {
                   running ? "bg-primary" : status === "paused" ? "bg-warning" : "bg-muted-foreground",
                 )}
               />
-              {status}
+              {t(`status.${status}` as never)}
             </span>
             {lastUsed ? (
               <span className="text-muted-foreground/70 normal-case tracking-normal">
-                · last used {new Date(lastUsed).toLocaleDateString()}
+                · {t("timer.lastUsed")} {formatDate(new Date(lastUsed), "short")}
               </span>
             ) : null}
           </div>
@@ -207,21 +209,21 @@ export function TimerCard({ timer }: { timer: Timer }) {
 
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span>
-            Today <span className="num text-foreground">{formatDuration(todayTotal)}</span>
+            {t("label.today")} <span className="num text-foreground">{formatDur(todayTotal)}</span>
           </span>
           <span>
-            Total <span className="num text-foreground">{formatDuration(lifetime)}</span>
+            {t("label.total")} <span className="num text-foreground">{formatDur(lifetime)}</span>
           </span>
         </div>
 
         <footer className="flex items-center gap-2">
           {running ? (
             <Button variant="secondary" className="flex-1" onClick={() => pauseTimer(timer.id)}>
-              <Pause className="size-4" /> Pause
+              <Pause className="size-4" /> {t("action.pause")}
             </Button>
           ) : (
             <Button className="flex-1" onClick={handleStart}>
-              <Play className="size-4" /> {status === "paused" ? "Resume" : "Start"}
+              <Play className="size-4" /> {status === "paused" ? t("action.resume") : t("action.start")}
             </Button>
           )}
           <Button
@@ -229,7 +231,7 @@ export function TimerCard({ timer }: { timer: Timer }) {
             size="icon"
             onClick={handleReset}
             disabled={elapsed === 0}
-            aria-label="Reset session"
+            aria-label={t("timer.resetSession")}
           >
             <RotateCcw className="size-4" />
           </Button>
@@ -242,26 +244,25 @@ export function TimerCard({ timer }: { timer: Timer }) {
         timer={timer}
         onSubmit={(draft) => {
           updateTimer(timer.id, draft);
-          toast.success("Timer updated");
+          toast.success(t("timer.updated"));
         }}
       />
 
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset “{timer.name}”?</AlertDialogTitle>
+            <AlertDialogTitle>{t("timer.reset.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This resets the current timer session back to 00:00. Your completed study history is
-              kept.
+              {timer.name} — {t("timer.reset.desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("action.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => resetTimer(timer.id)}
             >
-              Reset timer
+              {t("timer.reset.action")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -270,14 +271,15 @@ export function TimerCard({ timer }: { timer: Timer }) {
       <AlertDialog open={switchOpen} onOpenChange={setSwitchOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Switch to “{timer.name}”?</AlertDialogTitle>
+            <AlertDialogTitle>{t("timer.switch.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {activeName} is currently running. It will be paused with its elapsed time preserved.
+              {activeName ? `${activeName} — ` : ""}
+              {t("timer.switch.desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => startTimer(timer.id)}>Switch timer</AlertDialogAction>
+            <AlertDialogCancel>{t("action.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => startTimer(timer.id)}>{t("timer.switch.action")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -285,26 +287,25 @@ export function TimerCard({ timer }: { timer: Timer }) {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{timer.name}”?</AlertDialogTitle>
+            <AlertDialogTitle>{t("timer.delete.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Archiving is usually better — the timer leaves your dashboard but its history stays.
-              If you delete, choose what happens to {formatDuration(lifetime)} of recorded sessions.
+              {timer.name} — {t("timer.delete.desc")} ({formatDur(lifetime)})
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-between">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("action.cancel")}</AlertDialogCancel>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => { archiveTimer(timer.id, true); setDeleteOpen(false); }}>
-                Archive instead
+                {t("timer.delete.archiveInstead")}
               </Button>
               <Button variant="secondary" onClick={() => { deleteTimer(timer.id, false); setDeleteOpen(false); }}>
-                Delete, keep history
+                {t("timer.delete.keepHistory")}
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => { deleteTimer(timer.id, true); setDeleteOpen(false); }}
               >
-                Delete everything
+                {t("timer.delete.everything")}
               </Button>
             </div>
           </AlertDialogFooter>

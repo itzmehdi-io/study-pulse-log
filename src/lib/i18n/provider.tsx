@@ -37,6 +37,12 @@ export interface I18nValue {
   weekdayShort: (date: Date) => string;
   weekdayLong: (date: Date) => string;
   monthName: (date: Date) => string;
+  /** Locale-aware compact duration, e.g. "1h 42m" / "۱س ۴۲د". */
+  formatDur: (ms: number, opts?: { showSeconds?: boolean }) => string;
+  /** Locale-aware goal label from minutes. */
+  goalText: (minutes: number) => string;
+  /** 6 (Saturday) in fa, 1 (Monday) in en. */
+  weekStartsOn: number;
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
@@ -117,6 +123,28 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         (lang === "fa" ? WEEKDAYS_FA_SHORT : WEEKDAYS_EN_SHORT)[persianWeekdayIndex(date)]!,
       weekdayLong: (date) =>
         (lang === "fa" ? WEEKDAYS_FA_LONG : WEEKDAYS_EN_LONG)[persianWeekdayIndex(date)]!,
+      formatDur: (ms, opts) => {
+        const total = Math.max(0, Math.floor(ms / 1000));
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const sec = total % 60;
+        const u = lang === "fa" ? { h: "س", m: "د", s: "ث" } : { h: "h", m: "m", s: "s" };
+        if (h > 0) return n(`${h}${u.h} ${String(m).padStart(2, "0")}${u.m}`);
+        if (m > 0)
+          return n(
+            opts?.showSeconds ? `${m}${u.m} ${String(sec).padStart(2, "0")}${u.s}` : `${m}${u.m}`,
+          );
+        return n(`${sec}${u.s}`);
+      },
+      goalText: (minutes) => {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        const u = lang === "fa" ? { h: "س", m: "د" } : { h: "h", m: "m" };
+        if (h && m) return n(`${h}${u.h} ${m}${u.m}`);
+        if (h) return n(`${h}${u.h}`);
+        return n(`${m}${u.m}`);
+      },
+      weekStartsOn: lang === "fa" ? 6 : 1,
       monthName: (date) =>
         lang === "fa"
           ? JALALI_MONTHS_FA[toJalali(date).jm - 1]!

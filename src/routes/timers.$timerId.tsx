@@ -4,14 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { TimerCard } from "@/components/study/TimerCard";
 import { TimerIcon } from "@/components/study/TimerIcon";
 import { Button } from "@/components/ui/button";
-import {
-  addDays,
-  dateKey,
-  formatDayLong,
-  formatDuration,
-  startOfLocalDay,
-  startOfWeek,
-} from "@/lib/study/format";
+import { useI18n } from "@/lib/i18n/provider";
+import { addDays, dateKey, keyToDate, startOfLocalDay, startOfWeek } from "@/lib/study/format";
 import { dailyTotals, sumDuration } from "@/lib/study/stats";
 import { useStudy } from "@/lib/study/store";
 import { WeekChart } from "@/components/study/WeekChart";
@@ -37,17 +31,18 @@ export const Route = createFileRoute("/timers/$timerId")({
 function TimerDetail() {
   const { timerId } = Route.useParams();
   const { timers, allSessions, settings } = useStudy();
+  const { t, n, formatDur, formatDate, weekdayShort, weekStartsOn } = useI18n();
   const timer = timers.find((t) => t.id === timerId);
 
   if (!timer) {
     return (
       <div className="panel mx-auto max-w-md p-8 text-center">
-        <h1 className="text-lg font-semibold">Timer not found</h1>
+        <h1 className="text-lg font-semibold">{t("td.notFound")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          It may have been deleted. Your other timers are still here.
+          {t("td.notFoundBody")}
         </p>
         <Button asChild className="mt-5">
-          <Link to="/timers">Back to timers</Link>
+          <Link to="/timers">{t("td.back")}</Link>
         </Button>
       </div>
     );
@@ -55,7 +50,7 @@ function TimerDetail() {
 
   const mine = allSessions.filter((s) => s.timerId === timer.id);
   const today = dateKey(new Date());
-  const weekStart = startOfWeek(new Date());
+  const weekStart = startOfWeek(new Date(), weekStartsOn);
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
   const totals = {
@@ -70,7 +65,7 @@ function TimerDetail() {
 
   const week = dailyTotals(mine, weekStart, 7).map((d) => ({
     ...d,
-    label: d.date.toLocaleDateString(undefined, { weekday: "short" }),
+    label: weekdayShort(d.date),
   }));
 
   const dayMap = new Map<string, number>();
@@ -85,7 +80,7 @@ function TimerDetail() {
         to="/timers"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> All timers
+        <ArrowLeft className="size-4" /> {t("td.back")}
       </Link>
 
       <header className="flex items-start gap-4">
@@ -108,44 +103,37 @@ function TimerDetail() {
 
       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Metric label="Total" value={formatDuration(totals.lifetime)} />
-          <Metric label="Today" value={formatDuration(totals.today)} />
-          <Metric label="This week" value={formatDuration(totals.week)} />
-          <Metric label="This month" value={formatDuration(totals.month)} />
-          <Metric label="Sessions" value={String(mine.length)} />
-          <Metric label="Avg. session" value={average ? formatDuration(average) : "—"} />
-          <Metric label="Longest session" value={longest ? formatDuration(longest) : "—"} />
-          <Metric
-            label="Created"
-            value={new Date(timer.createdAt).toLocaleDateString(undefined, {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          />
+          <Metric label={t("label.total")} value={formatDur(totals.lifetime)} />
+          <Metric label={t("action.today")} value={formatDur(totals.today)} />
+          <Metric label={t("label.thisWeek")} value={formatDur(totals.week)} />
+          <Metric label={t("stats.thisMonth")} value={formatDur(totals.month)} />
+          <Metric label={t("label.sessions")} value={n(mine.length)} />
+          <Metric label={t("td.avgSession")} value={average ? formatDur(average) : "—"} />
+          <Metric label={t("label.longestSession")} value={longest ? formatDur(longest) : "—"} />
+          <Metric label={t("td.created")} value={formatDate(new Date(timer.createdAt), "short")} />
         </div>
         <TimerCard timer={timer} />
       </div>
 
       <section className="panel space-y-5 p-6">
-        <h2 className="text-base font-semibold tracking-tight">This week</h2>
+        <h2 className="text-base font-semibold tracking-tight">{t("label.thisWeek")}</h2>
         <WeekChart data={week} goalMs={settings.dailyGoalMinutes * 60_000} />
       </section>
 
       <section className="panel p-6">
-        <h2 className="text-base font-semibold tracking-tight">Daily history</h2>
+        <h2 className="text-base font-semibold tracking-tight">{t("td.history")}</h2>
         {history.length ? (
           <ul className="mt-4 divide-y divide-border">
             {history.map(([key, total]) => (
               <li key={key} className="flex items-center justify-between py-3 text-sm">
-                <span>{formatDayLong(key)}</span>
-                <span className="num text-muted-foreground">{formatDuration(total)}</span>
+                <span>{formatDate(keyToDate(key), "long")}</span>
+                <span className="num text-muted-foreground">{formatDur(total)}</span>
               </li>
             ))}
           </ul>
         ) : (
           <p className="mt-3 text-sm text-muted-foreground">
-            Your progress starts here. Complete your first session with this timer to see history.
+            {t("td.historyEmpty")}
           </p>
         )}
       </section>
