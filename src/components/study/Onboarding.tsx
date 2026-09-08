@@ -25,6 +25,7 @@ export function Onboarding() {
         description: "",
         icon: TIMER_ICONS[0],
         accentColor: ACCENT_COLORS[0]!.value,
+        type: "study",
       });
     }
     updateSettings({ dailyGoalMinutes: goal, onboarded: true });

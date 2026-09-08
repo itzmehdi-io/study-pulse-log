@@ -14,13 +14,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { ACCENT_COLORS, TIMER_ICONS, type Timer } from "@/lib/study/types";
+import { useI18n } from "@/lib/i18n/provider";
+import {
+  ACCENT_COLORS,
+  TIMER_ICONS,
+  TIMER_TYPES,
+  type Timer,
+  type TimerType,
+} from "@/lib/study/types";
 
 export interface TimerDraft {
   name: string;
   description: string;
   icon: string;
   accentColor: string;
+  type: TimerType;
 }
 
 export function TimerDialog({
