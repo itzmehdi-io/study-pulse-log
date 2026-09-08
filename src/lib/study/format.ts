@@ -57,10 +57,10 @@ export function addDays(d: Date, n: number): Date {
   return next;
 }
 
-/** Week starting Monday. */
-export function startOfWeek(d: Date): Date {
+/** Week start; weekStartsOn 0=Sunday, 1=Monday, 6=Saturday (Persian week). */
+export function startOfWeek(d: Date, weekStartsOn = 1): Date {
   const date = startOfLocalDay(d);
-  const day = (date.getDay() + 6) % 7;
+  const day = (date.getDay() - weekStartsOn + 7) % 7;
   return addDays(date, -day);
 }
 
