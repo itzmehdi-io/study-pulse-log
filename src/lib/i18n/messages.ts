@@ -93,6 +93,7 @@ export const MESSAGES = {
     "empty.stats.title": "آمار پس از نخستین جلسه ساخته می‌شود",
     "empty.stats.body": "چند دقیقه مطالعه کنید تا نمودارها شکل بگیرند.",
 
+    "timer.type": "نوع",
     "session.edit.title": "ویرایش جلسه مطالعه",
     "session.edit.desc": "زمان شروع، پایان یا مدت را اصلاح کنید؛ همه گزارش‌ها به‌روز می‌شوند.",
     "session.add.title": "ثبت دستی جلسه",
@@ -229,6 +230,7 @@ export const MESSAGES = {
     "empty.stats.title": "Statistics appear after your first session",
     "empty.stats.body": "Study for a few minutes and the charts fill in.",
 
+    "timer.type": "Type",
     "session.edit.title": "Edit study session",
     "session.edit.desc": "Adjust start, end or duration — every report updates.",
     "session.add.title": "Log a session",

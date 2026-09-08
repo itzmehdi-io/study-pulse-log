@@ -113,7 +113,7 @@ export function TimerDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>{t("sessions.type") ?? "Type"}</Label>
+            <Label>{t("timer.type")}</Label>
             <div className="flex flex-wrap gap-2">
               {TIMER_TYPES.map((type) => (
                 <button
