@@ -70,7 +70,7 @@ function Dashboard() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8">
-      <section className="panel lamp-glow relative overflow-hidden p-6 md:p-8">
+      <section className="panel edge-light lamp-glow animate-float-in relative overflow-hidden p-6 md:p-8">
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
@@ -79,19 +79,26 @@ function Dashboard() {
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="group mt-2 flex items-baseline gap-3 text-left"
+              className="group mt-2 flex items-baseline gap-3 text-start"
             >
-              <span className="num text-5xl font-semibold tracking-tight md:text-6xl">
-                {formatDuration(todayTotal)}
+              <span className="num bg-gradient-to-b from-foreground to-foreground/65 bg-clip-text text-5xl font-semibold tracking-tight text-transparent md:text-6xl">
+                {n(formatDur(todayTotal))}
               </span>
-              <ArrowUpRight className="size-5 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:text-primary" />
+              <ArrowUpRight className="size-5 text-muted-foreground transition-all duration-300 group-hover:-translate-y-0.5 group-hover:text-primary" />
             </button>
             <p className="mt-3 text-sm text-muted-foreground">
               {yesterdayTotal > 0 ? (
                 <>
-                  <span className={diff >= 0 ? "text-success" : "text-destructive"}>
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                      diff >= 0
+                        ? "bg-success/12 text-success ring-1 ring-success/25"
+                        : "bg-destructive/12 text-destructive ring-1 ring-destructive/25",
+                    )}
+                  >
                     {diff >= 0 ? "+" : "−"}
-                    {formatDuration(Math.abs(diff))}
+                    {n(formatDur(Math.abs(diff)))}
                   </span>{" "}
                   {t("dash.vsYesterday")}
                 </>
@@ -118,7 +125,7 @@ function Dashboard() {
           <GoalRing progress={progress} className="self-center">
             <span className="num text-2xl font-semibold">{n(Math.round(progress * 100))}%</span>
             <span className="mt-1 text-[11px] text-muted-foreground">
-              {t("dash.of")} {goalLabel(settings.dailyGoalMinutes)}
+              {t("dash.of")} {goalText(settings.dailyGoalMinutes)}
             </span>
             {progress >= 1 ? (
               <span className="mt-1 text-[10px] uppercase tracking-widest text-success">
@@ -130,29 +137,27 @@ function Dashboard() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex items-end justify-between">
-          <div>
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
             <h2 className="text-lg font-semibold tracking-tight">{t("nav.timers")}</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="truncate text-sm text-muted-foreground">
               {activeTimerId ? t("dash.hintActive") : t("dash.hint")}
             </p>
           </div>
-          <Button onClick={() => setCreateOpen(true)}>
+          <Button className="shrink-0" onClick={() => setCreateOpen(true)}>
             <Plus className="size-4" /> {t("dash.addTimer")}
           </Button>
         </div>
 
         {visibleTimers.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {visibleTimers.map((timer) => (
               <TimerCard key={timer.id} timer={timer} />
             ))}
           </div>
         ) : (
-          <div className="panel flex flex-col items-center gap-4 px-6 py-16 text-center">
-            <span className="grid size-12 place-items-center rounded-2xl bg-primary/12 text-primary">
-              <TimerIco className="size-6" />
-            </span>
+          <div className="panel jade-glow relative flex flex-col items-center gap-4 overflow-hidden px-6 py-16 text-center">
+            <EmptyMark />
             <div>
               <h3 className="text-lg font-semibold">{t("dash.emptyTitle")}</h3>
               <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
@@ -165,6 +170,7 @@ function Dashboard() {
           </div>
         )}
       </section>
+
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="panel space-y-5 p-6">
