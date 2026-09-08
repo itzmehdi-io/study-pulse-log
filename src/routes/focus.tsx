@@ -178,6 +178,7 @@ function FocusFrame({
   accent?: string;
   active?: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6">
       <div
