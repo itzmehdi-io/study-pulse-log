@@ -10,6 +10,7 @@ import { TimerDialog } from "@/components/study/TimerDialog";
 import { TodayDrawer } from "@/components/study/TodayDrawer";
 import { WeekChart } from "@/components/study/WeekChart";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n/provider";
 import { addDays, dateKey, formatDuration, goalLabel, startOfWeek } from "@/lib/study/format";
 import { byTimer, currentStreak, dailyTotals, sessionsOnDay, sumDuration } from "@/lib/study/stats";
 import { useStudy } from "@/lib/study/store";
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   useGlobalShortcuts();
   const store = useStudy();
+  const { t, n, weekdayShort } = useI18n();
   const { timers, allSessions, settings, createTimer, activeTimerId } = store;
   const [createOpen, setCreateOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -63,7 +65,7 @@ function Dashboard() {
   const weekStart = startOfWeek(new Date());
   const week = dailyTotals(allSessions, weekStart, 7).map((d) => ({
     ...d,
-    label: d.date.toLocaleDateString(undefined, { weekday: "short" }),
+    label: weekdayShort(d.date),
   }));
 
   return (
@@ -72,7 +74,7 @@ function Dashboard() {
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-              Today
+              {t("label.today")}
             </p>
             <button
               type="button"
@@ -91,22 +93,22 @@ function Dashboard() {
                     {diff >= 0 ? "+" : "−"}
                     {formatDuration(Math.abs(diff))}
                   </span>{" "}
-                  compared to yesterday
+                  {t("dash.vsYesterday")}
                 </>
               ) : (
-                "Your first sessions today set the baseline."
+                t("dash.baseline")
               )}
             </p>
 
             <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
-              <Stat label="Sessions" value={String(todaySessions.length)} />
-              <Stat label="Active timers" value={String(visibleTimers.length)} />
+              <Stat label={t("label.sessions")} value={n(todaySessions.length)} />
+              <Stat label={t("nav.timers")} value={n(visibleTimers.length)} />
               <Stat
-                label="Streak"
+                label={t("label.streak")}
                 value={
                   <span className="flex items-center gap-1.5">
                     <Flame className={streak ? "size-4 text-primary" : "size-4 text-muted-foreground"} />
-                    {streak} day{streak === 1 ? "" : "s"}
+                    {n(streak)} {t("dash.days")}
                   </span>
                 }
               />
@@ -114,13 +116,13 @@ function Dashboard() {
           </div>
 
           <GoalRing progress={progress} className="self-center">
-            <span className="num text-2xl font-semibold">{Math.round(progress * 100)}%</span>
+            <span className="num text-2xl font-semibold">{n(Math.round(progress * 100))}%</span>
             <span className="mt-1 text-[11px] text-muted-foreground">
-              of {goalLabel(settings.dailyGoalMinutes)}
+              {t("dash.of")} {goalLabel(settings.dailyGoalMinutes)}
             </span>
             {progress >= 1 ? (
               <span className="mt-1 text-[10px] uppercase tracking-widest text-success">
-                Goal reached
+                {t("dash.goalReached")}
               </span>
             ) : null}
           </GoalRing>
@@ -130,13 +132,13 @@ function Dashboard() {
       <section className="space-y-4">
         <div className="flex items-end justify-between">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">Timers</h2>
+            <h2 className="text-lg font-semibold tracking-tight">{t("nav.timers")}</h2>
             <p className="text-sm text-muted-foreground">
-              {activeTimerId ? "One timer runs at a time — switching keeps every second." : "Press N to add a timer, Space to pause."}
+              {activeTimerId ? t("dash.hintActive") : t("dash.hint")}
             </p>
           </div>
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" /> Add timer
+            <Plus className="size-4" /> {t("dash.addTimer")}
           </Button>
         </div>
 
@@ -152,13 +154,13 @@ function Dashboard() {
               <TimerIco className="size-6" />
             </span>
             <div>
-              <h3 className="text-lg font-semibold">Start tracking your study</h3>
+              <h3 className="text-lg font-semibold">{t("dash.emptyTitle")}</h3>
               <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                Create your first timer and begin building your study history.
+                {t("dash.emptyBody")}
               </p>
             </div>
             <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="size-4" /> Create timer
+              <Plus className="size-4" /> {t("dash.createTimer")}
             </Button>
           </div>
         )}
@@ -167,13 +169,13 @@ function Dashboard() {
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="panel space-y-5 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold tracking-tight">Today's breakdown</h2>
+            <h2 className="text-base font-semibold tracking-tight">{t("dash.todayBreakdown")}</h2>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
               className="text-xs text-muted-foreground hover:text-primary"
             >
-              View sessions
+              {t("dash.viewSessions")}
             </button>
           </div>
           <BreakdownBars rows={breakdown} />
@@ -181,9 +183,9 @@ function Dashboard() {
 
         <div className="panel space-y-5 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold tracking-tight">This week</h2>
+            <h2 className="text-base font-semibold tracking-tight">{t("label.thisWeek")}</h2>
             <Link to="/statistics" className="text-xs text-muted-foreground hover:text-primary">
-              Statistics
+              {t("nav.statistics")}
             </Link>
           </div>
           <WeekChart data={week} goalMs={goalMs} />
@@ -195,7 +197,7 @@ function Dashboard() {
         onOpenChange={setCreateOpen}
         onSubmit={(draft) => {
           createTimer(draft);
-          toast.success(`“${draft.name}” is ready`);
+          toast.success(`${t("timer.created")} · ${draft.name}`);
         }}
       />
       <TodayDrawer
