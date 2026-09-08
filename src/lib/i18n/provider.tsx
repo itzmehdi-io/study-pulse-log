@@ -78,7 +78,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const value = useMemo<I18nValue>(() => {
+  const value = useMemo<I18nValue>(() => createI18nValue(lang, setLang), [lang, setLang]);
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
+
+function createI18nValue(lang: Lang, setLang: (next: Lang) => void): I18nValue {
+  {
+    const dir: "rtl" | "ltr" = lang === "fa" ? "rtl" : "ltr";
     const dict = MESSAGES[lang];
     const n = (v: string | number) => (lang === "fa" ? toPersianDigits(v) : String(v));
 
@@ -150,15 +157,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
           ? JALALI_MONTHS_FA[toJalali(date).jm - 1]!
           : date.toLocaleDateString("en-US", { month: "long" }),
     };
-  }, [lang, dir, setLang]);
-
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  }
 }
 
+const FALLBACK_I18N = createI18nValue("fa", () => {});
+
 export function useI18n(): I18nValue {
-  const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useI18n must be used inside I18nProvider");
-  return ctx;
+  return useContext(I18nContext) ?? FALLBACK_I18N;
 }
 
 export { JALALI_MONTHS_EN, JALALI_MONTHS_FA };
