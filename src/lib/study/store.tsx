@@ -332,11 +332,11 @@ export function StudyProvider({ children }: { children: ReactNode }) {
       if (run.startedAt !== null && now > run.startedAt) {
         const type = state.timers.find((t) => t.id === run.timerId)?.type ?? "study";
         live.push(...splitByLocalDay(run.timerId, run.startedAt, now, { type }));
-
       }
     }
     return [...state.sessions, ...live];
-  }, [state.sessions, state.runStates, now]);
+  }, [state.sessions, state.runStates, state.timers, now]);
+
 
   const elapsedOf = useCallback(
     (timerId: string) => {
