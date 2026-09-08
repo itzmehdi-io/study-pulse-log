@@ -38,7 +38,7 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   useGlobalShortcuts();
   const store = useStudy();
-  const { t, n, weekdayShort } = useI18n();
+  const { t, n, weekdayShort, formatDur, goalText, weekStartsOn } = useI18n();
   const { timers, allSessions, settings, createTimer, activeTimerId } = store;
   const [createOpen, setCreateOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -62,7 +62,7 @@ function Dashboard() {
   const streak = currentStreak(allSessions, settings.streakMinimumMinutes);
   const breakdown = byTimer(todaySessions, timers);
 
-  const weekStart = startOfWeek(new Date());
+  const weekStart = startOfWeek(new Date(), weekStartsOn);
   const week = dailyTotals(allSessions, weekStart, 7).map((d) => ({
     ...d,
     label: weekdayShort(d.date),
