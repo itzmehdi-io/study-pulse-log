@@ -42,6 +42,9 @@
   --color-info-foreground: var(--info-foreground);
   --color-plan: var(--plan);
   --color-border: var(--border);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
+
   --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);

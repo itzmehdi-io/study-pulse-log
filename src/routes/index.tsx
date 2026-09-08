@@ -11,7 +11,7 @@ import { TodayDrawer } from "@/components/study/TodayDrawer";
 import { WeekChart } from "@/components/study/WeekChart";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/provider";
-import { addDays, dateKey, formatDuration, goalLabel, startOfWeek } from "@/lib/study/format";
+import { addDays, dateKey, startOfWeek } from "@/lib/study/format";
 import { byTimer, currentStreak, dailyTotals, sessionsOnDay, sumDuration } from "@/lib/study/stats";
 import { useStudy } from "@/lib/study/store";
 import { NEW_TIMER_EVENT, useGlobalShortcuts } from "@/lib/study/useShortcuts";
