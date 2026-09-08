@@ -13,29 +13,30 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n/provider";
 import { formatClock } from "@/lib/study/format";
 import { useStudy } from "@/lib/study/store";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { group: "Focus", items: [
-    { to: "/", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/timers", label: "Timers", icon: TimerIco },
-    { to: "/focus", label: "Focus mode", icon: Focus },
+  { group: "nav.focusGroup", items: [
+    { to: "/", label: "nav.dashboard", icon: LayoutDashboard },
+    { to: "/timers", label: "nav.timers", icon: TimerIco },
+    { to: "/focus", label: "nav.focus", icon: Focus },
   ] },
-  { group: "Progress", items: [
-    { to: "/calendar", label: "Calendar", icon: CalendarDays },
-    { to: "/statistics", label: "Statistics", icon: BarChart3 },
+  { group: "nav.progressGroup", items: [
+    { to: "/calendar", label: "nav.calendar", icon: CalendarDays },
+    { to: "/statistics", label: "nav.statistics", icon: BarChart3 },
   ] },
-  { group: "Manage", items: [{ to: "/settings", label: "Settings", icon: Settings }] },
+  { group: "nav.manageGroup", items: [{ to: "/settings", label: "nav.settings", icon: Settings }] },
 ] as const;
 
 const MOBILE_NAV = [
-  { to: "/", label: "Home", icon: LayoutDashboard },
-  { to: "/timers", label: "Timers", icon: TimerIco },
-  { to: "/focus", label: "Focus", icon: Focus },
-  { to: "/calendar", label: "Calendar", icon: CalendarDays },
-  { to: "/statistics", label: "Stats", icon: BarChart3 },
+  { to: "/", label: "nav.home", icon: LayoutDashboard },
+  { to: "/timers", label: "nav.timers", icon: TimerIco },
+  { to: "/focus", label: "nav.focus", icon: Focus },
+  { to: "/calendar", label: "nav.calendar", icon: CalendarDays },
+  { to: "/statistics", label: "nav.stats", icon: BarChart3 },
 ] as const;
 
 function useThemeSync() {
@@ -61,6 +62,7 @@ function useThemeSync() {
 
 export function ActiveTimerPill({ compact = false }: { compact?: boolean }) {
   const { activeTimerId, timers, elapsedOf, pauseTimer } = useStudy();
+  const { t } = useI18n();
   const timer = timers.find((t) => t.id === activeTimerId);
   if (!timer) return null;
 
@@ -76,7 +78,7 @@ export function ActiveTimerPill({ compact = false }: { compact?: boolean }) {
         size="icon"
         className="size-6 text-primary hover:bg-primary/15"
         onClick={() => pauseTimer(timer.id)}
-        aria-label="Pause active timer"
+        aria-label={t("action.pause")}
       >
         <Pause className="size-3.5" />
       </Button>
@@ -89,6 +91,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [collapsed, setCollapsed] = useState(false);
   const { activeTimerId, timers, startTimer } = useStudy();
+  const { t, lang, setLang, formatDate } = useI18n();
 
   if (pathname.startsWith("/focus")) return <>{children}</>;
 
@@ -108,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Focus className="size-4" />
           </span>
           {!collapsed ? (
-            <span className="text-sm font-semibold tracking-tight">Focus Studio</span>
+            <span className="text-sm font-semibold tracking-tight">{t("app.name")}</span>
           ) : null}
         </div>
 
@@ -117,14 +120,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div key={section.group} className="space-y-1">
               {!collapsed ? (
                 <p className="px-2 pb-1 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/70">
-                  {section.group}
+                  {t(section.group)}
                 </p>
               ) : null}
               {section.items.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
-                  title={item.label}
+                  title={t(item.label)}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors",
                     isActive(item.to)
@@ -135,7 +138,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <item.icon
                     className={cn("size-4 shrink-0", isActive(item.to) && "text-primary")}
                   />
-                  {!collapsed ? <span className="truncate">{item.label}</span> : null}
+                  {!collapsed ? <span className="truncate">{t(item.label)}</span> : null}
                 </Link>
               ))}
             </div>
@@ -149,8 +152,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="w-full justify-start text-muted-foreground"
             onClick={() => setCollapsed((c) => !c)}
           >
-            <ChevronLeft className={cn("size-4 transition-transform", collapsed && "rotate-180")} />
-            {!collapsed ? "Collapse" : null}
+            <ChevronLeft
+              className={cn(
+                "size-4 transition-transform",
+                (collapsed ? lang !== "fa" : lang === "fa") && "rotate-180",
+              )}
+            />
+            {!collapsed ? t("nav.collapse") : null}
           </Button>
         </div>
       </aside>
@@ -161,14 +169,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="grid size-8 place-items-center rounded-lg bg-primary/15 text-primary">
               <Focus className="size-4" />
             </span>
-            <span className="text-sm font-semibold">Focus Studio</span>
+            <span className="text-sm font-semibold">{t("app.name")}</span>
           </div>
           <p className="hidden text-sm text-muted-foreground md:block">
-            {new Date().toLocaleDateString(undefined, {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-            })}
+            {formatDate(new Date(), "long")}
           </p>
           <div className="flex items-center gap-2">
             {activeTimerId ? (
@@ -180,11 +184,20 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="text-muted-foreground"
                 onClick={() => startTimer(resumeCandidate.id)}
               >
-                <Play className="size-3.5" /> Start {resumeCandidate.name}
+                <Play className="size-3.5" /> {t("action.start")} · {resumeCandidate.name}
               </Button>
             ) : null}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-2 text-xs text-muted-foreground"
+              onClick={() => setLang(lang === "fa" ? "en" : "fa")}
+              aria-label={t("label.language")}
+            >
+              {lang === "fa" ? "EN" : "فا"}
+            </Button>
             <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
-              <Link to="/focus">Focus mode</Link>
+              <Link to="/focus">{t("nav.focus")}</Link>
             </Button>
           </div>
         </header>
@@ -202,7 +215,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               )}
             >
               <item.icon className="size-[18px]" />
-              {item.label}
+              {t(item.label)}
             </Link>
           ))}
         </nav>
