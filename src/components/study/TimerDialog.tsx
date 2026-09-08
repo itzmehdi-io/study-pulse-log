@@ -113,6 +113,25 @@ export function TimerDialog({
           </div>
 
           <div className="space-y-2">
+            <Label>{t("sessions.type") ?? "Type"}</Label>
+            <div className="flex flex-wrap gap-2">
+              {TIMER_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setDraft((d) => ({ ...d, type }))}
+                  className={cn(
+                    "rounded-full border border-border bg-elevated px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground",
+                    draft.type === type && "border-primary/60 bg-primary/10 text-primary",
+                  )}
+                >
+                  {t(`type.${type}` as never)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label>Icon</Label>
             <div className="flex flex-wrap gap-2">
               {TIMER_ICONS.map((icon) => (
