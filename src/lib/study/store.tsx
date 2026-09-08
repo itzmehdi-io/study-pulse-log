@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { dateKey } from "./format";
+
 import { splitByLocalDay } from "./stats";
 import {
   DEFAULT_SETTINGS,
@@ -131,7 +131,9 @@ export function StudyProvider({ children }: { children: ReactNode }) {
   const commitRunning = useCallback((prev: AppState, timerId: string, at: number) => {
     const run = prev.runStates[timerId];
     if (!run || run.startedAt === null) return prev;
-    const segments = splitByLocalDay(timerId, run.startedAt, at);
+    const type = prev.timers.find((t) => t.id === timerId)?.type ?? "study";
+    const segments = splitByLocalDay(timerId, run.startedAt, at, { type });
+
     const delta = at - run.startedAt;
     return {
       ...prev,
@@ -243,18 +245,82 @@ export function StudyProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, sessions: prev.sessions.filter((s) => s.timerId !== id) }));
   }, []);
 
+  const updateSession: StoreValue["updateSession"] = useCallback((id, patch) => {
+    if (patch.endedAt <= patch.startedAt) return;
+    setState((prev) => {
+      const existing = prev.sessions.find((s) => s.id === id);
+      if (!existing) return prev;
+      const timerId = patch.timerId ?? existing.timerId;
+      const type = prev.timers.find((t) => t.id === timerId)?.type ?? existing.type ?? "study";
+      // Re-split so a corrected session that now crosses midnight lands on both days.
+      const segments = splitByLocalDay(timerId, patch.startedAt, patch.endedAt, {
+        type,
+        manual: true,
+        idSeed: id,
+      });
+      return {
+        ...prev,
+        sessions: [...prev.sessions.filter((s) => s.id !== id), ...segments],
+      };
+    });
+  }, []);
+
+  const addSession: StoreValue["addSession"] = useCallback((input) => {
+    if (input.endedAt <= input.startedAt) return;
+    setState((prev) => {
+      const type = prev.timers.find((t) => t.id === input.timerId)?.type ?? "study";
+      const segments = splitByLocalDay(input.timerId, input.startedAt, input.endedAt, {
+        type,
+        manual: true,
+        idSeed: uid(),
+      });
+      return { ...prev, sessions: [...prev.sessions, ...segments] };
+    });
+  }, []);
+
+  const deleteSession: StoreValue["deleteSession"] = useCallback((id) => {
+    setState((prev) => ({ ...prev, sessions: prev.sessions.filter((s) => s.id !== id) }));
+  }, []);
+
+  const setPlan: StoreValue["setPlan"] = useCallback((date, patch) => {
+    setState((prev) => {
+      const current: DayPlan = prev.plans[date] ?? {
+        date,
+        studyMinutes: 0,
+        sleepHours: 0,
+        restMinutes: 0,
+        testCount: 0,
+        updatedAt: Date.now(),
+      };
+      return {
+        ...prev,
+        plans: { ...prev.plans, [date]: { ...current, ...patch, date, updatedAt: Date.now() } },
+      };
+    });
+  }, []);
+
+  const removePlan: StoreValue["removePlan"] = useCallback((date) => {
+    setState((prev) => {
+      const plans = { ...prev.plans };
+      delete plans[date];
+      return { ...prev, plans };
+    });
+  }, []);
+
   const updateSettings: StoreValue["updateSettings"] = useCallback((patch) => {
     setState((prev) => ({ ...prev, settings: { ...prev.settings, ...patch } }));
   }, []);
 
   const replaceAll: StoreValue["replaceAll"] = useCallback((incoming) => {
     setState((prev) => ({
-      timers: incoming.timers ?? prev.timers,
+      timers: (incoming.timers ?? prev.timers).map((t) => ({ ...t, type: t.type ?? "study" })),
       sessions: incoming.sessions ?? prev.sessions,
       settings: { ...prev.settings, ...(incoming.settings ?? {}) },
       runStates: incoming.runStates ?? {},
+      plans: incoming.plans ?? prev.plans,
     }));
   }, []);
+
 
   const clearAll = useCallback(() => {
     setState((prev) => ({ ...EMPTY_STATE, settings: { ...prev.settings, onboarded: true } }));
@@ -264,11 +330,13 @@ export function StudyProvider({ children }: { children: ReactNode }) {
     const live: StudySession[] = [];
     for (const run of Object.values(state.runStates)) {
       if (run.startedAt !== null && now > run.startedAt) {
-        live.push(...splitByLocalDay(run.timerId, run.startedAt, now));
+        const type = state.timers.find((t) => t.id === run.timerId)?.type ?? "study";
+        live.push(...splitByLocalDay(run.timerId, run.startedAt, now, { type }));
       }
     }
     return [...state.sessions, ...live];
-  }, [state.sessions, state.runStates, now]);
+  }, [state.sessions, state.runStates, state.timers, now]);
+
 
   const elapsedOf = useCallback(
     (timerId: string) => {
@@ -317,6 +385,12 @@ export function StudyProvider({ children }: { children: ReactNode }) {
     pauseTimer,
     resetTimer,
     clearTimerHistory,
+    updateSession,
+    addSession,
+    deleteSession,
+    setPlan,
+    removePlan,
+
     updateSettings,
     replaceAll,
     clearAll,

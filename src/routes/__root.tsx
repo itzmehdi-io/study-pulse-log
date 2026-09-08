@@ -13,8 +13,10 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/study/AppShell";
+import { FloatingTimer } from "@/components/study/FloatingTimer";
 import { Onboarding } from "@/components/study/Onboarding";
 import { Toaster } from "@/components/ui/sonner";
+import { I18nProvider } from "@/lib/i18n/provider";
 import { StudyProvider, useStudy } from "@/lib/study/store";
 
 function NotFoundComponent() {
@@ -97,12 +99,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
+
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -112,7 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="fa" dir="rtl" className="dark font-fa">
       <head>
         <HeadContent />
       </head>
@@ -129,15 +138,19 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StudyProvider>
-        <ThemeSync />
-        <Layout />
-        <Onboarding />
-        <Toaster position="top-center" />
-      </StudyProvider>
+      <I18nProvider>
+        <StudyProvider>
+          <ThemeSync />
+          <Layout />
+          <FloatingTimer />
+          <Onboarding />
+          <Toaster position="top-center" />
+        </StudyProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }
+
 
 function ThemeSync() {
   const { settings } = useStudy();
