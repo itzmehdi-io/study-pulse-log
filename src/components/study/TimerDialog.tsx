@@ -42,11 +42,13 @@ export function TimerDialog({
   timer?: Timer | null;
   onSubmit: (draft: TimerDraft) => void;
 }) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState<TimerDraft>({
     name: "",
     description: "",
     icon: TIMER_ICONS[0],
     accentColor: ACCENT_COLORS[0]!.value,
+    type: "study",
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +60,7 @@ export function TimerDialog({
       description: timer?.description ?? "",
       icon: timer?.icon ?? TIMER_ICONS[0],
       accentColor: timer?.accentColor ?? ACCENT_COLORS[0]!.value,
+      type: timer?.type ?? "study",
     });
   }, [open, timer]);
 
