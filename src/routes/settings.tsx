@@ -16,17 +16,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { formatDuration } from "@/lib/study/format";
+import { useI18n } from "@/lib/i18n/provider";
 import { sumDuration } from "@/lib/study/stats";
 import { useStudy } from "@/lib/study/store";
 import type { ThemeMode } from "@/lib/study/types";
 import { cn } from "@/lib/utils";
 
 const GOALS = [60, 120, 240, 360, 480];
-const THEMES: { key: ThemeMode; label: string }[] = [
-  { key: "dark", label: "Dark" },
-  { key: "light", label: "Light" },
-  { key: "system", label: "System" },
+const THEMES: { key: ThemeMode; labelKey: string }[] = [
+  { key: "dark", labelKey: "set.dark" },
+  { key: "light", labelKey: "set.light" },
+  { key: "system", labelKey: "set.system" },
 ];
 
 export const Route = createFileRoute("/settings")({
@@ -50,6 +50,7 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const { settings, updateSettings, sessions, timers, replaceAll, clearAll } = useStudy();
+  const { t, n, lang, setLang, formatDur } = useI18n();
   const [clearOpen, setClearOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -63,7 +64,7 @@ function SettingsPage() {
       const rows = [
         "timer,date,started_at,ended_at,duration_minutes",
         ...sessions.map((s) => {
-          const name = timers.find((t) => t.id === s.timerId)?.name ?? "Deleted timer";
+          const name = timers.find((t) => t.id === s.timerId)?.name ?? t("set.deletedTimer");
           return [
             `"${name.replace(/"/g, '""')}"`,
             s.date,
@@ -82,7 +83,9 @@ function SettingsPage() {
     a.download = `focus-studio-history.${format}`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`Exported ${sessions.length} sessions as ${format.toUpperCase()}`);
+    toast.success(
+      t("set.exported").replace("{n}", n(sessions.length)).replace("{f}", format.toUpperCase()),
+    );
   };
 
   const importData = async (file: File) => {
@@ -92,38 +95,38 @@ function SettingsPage() {
         throw new Error("bad shape");
       }
       replaceAll(parsed);
-      toast.success("Study data imported");
+      toast.success(t("set.imported"));
     } catch {
-      toast.error("That file doesn't look like a Focus Studio export");
+      toast.error(t("set.importError"));
     }
   };
 
   const requestNotifications = async () => {
     if (!("Notification" in window)) {
-      toast.error("This browser doesn't support notifications");
+      toast.error(t("set.noNotif"));
       return;
     }
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
       updateSettings({ notifications: true });
-      toast.success("Notifications enabled");
+      toast.success(t("set.notifOn"));
     } else {
       updateSettings({ notifications: false });
-      toast.error("Permission denied");
+      toast.error(t("set.notifDenied"));
     }
   };
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("nav.settings")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your data lives in this browser and never leaves it unless you export it.
+          {t("set.subtitle")}
         </p>
       </header>
 
-      <Section title="Study">
-        <Row label="Daily goal" description="Shown as the goal ring on your dashboard.">
+      <Section title={t("set.study")}>
+        <Row label={t("set.dailyGoal")} description={t("set.dailyGoalDesc")}>
           <div className="flex flex-wrap items-center gap-2">
             {GOALS.map((g) => (
               <button
@@ -137,7 +140,7 @@ function SettingsPage() {
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {g / 60}h
+                {n(g / 60)}
               </button>
             ))}
             <Input
@@ -149,12 +152,12 @@ function SettingsPage() {
                 updateSettings({ dailyGoalMinutes: Math.max(15, Number(e.target.value) || 15) })
               }
             />
-            <span className="text-xs text-muted-foreground">minutes</span>
+            <span className="text-xs text-muted-foreground">{t("set.minutes")}</span>
           </div>
         </Row>
         <Row
-          label="Streak minimum"
-          description="Minimum study time for a day to count toward your streak."
+          label={t("set.streakMin")}
+          description={t("set.streakMinDesc")}
         >
           <div className="flex items-center gap-2">
             <Input
@@ -166,92 +169,111 @@ function SettingsPage() {
                 updateSettings({ streakMinimumMinutes: Math.max(5, Number(e.target.value) || 5) })
               }
             />
-            <span className="text-xs text-muted-foreground">minutes / day</span>
+            <span className="text-xs text-muted-foreground">{t("set.perDay")}</span>
           </div>
         </Row>
       </Section>
 
-      <Section title="Appearance">
-        <Row label="Theme" description="Dark is the native mode for late-night sessions.">
+      <Section title={t("set.appearance")}>
+        <Row label={t("label.language")} description="فارسی / English">
           <div className="flex gap-2">
-            {THEMES.map((t) => (
+            {(["fa", "en"] as const).map((l) => (
               <button
-                key={t.key}
+                key={l}
                 type="button"
-                onClick={() => updateSettings({ theme: t.key })}
+                onClick={() => setLang(l)}
                 className={cn(
                   "rounded-lg border border-border px-3 py-1.5 text-sm transition-colors",
-                  settings.theme === t.key
+                  lang === l
                     ? "border-primary/60 bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {t.label}
+                {l === "fa" ? "فارسی" : "English"}
+              </button>
+            ))}
+          </div>
+        </Row>
+        <Row label={t("label.theme")} description={t("set.themeDesc")}>
+          <div className="flex gap-2">
+            {THEMES.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => updateSettings({ theme: item.key })}
+                className={cn(
+                  "rounded-lg border border-border px-3 py-1.5 text-sm transition-colors",
+                  settings.theme === item.key
+                    ? "border-primary/60 bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t(item.labelKey as never)}
               </button>
             ))}
           </div>
         </Row>
       </Section>
 
-      <Section title="Timer">
+      <Section title={t("set.timer")}>
         <Toggle
-          label="Confirm before reset"
-          description="Ask before clearing the current session."
+          label={t("set.confirmReset")}
+          description={t("set.confirmResetDesc")}
           checked={settings.confirmReset}
           onChange={(v) => updateSettings({ confirmReset: v })}
         />
         <Toggle
-          label="Confirm before deleting"
-          description="Ask before removing a timer."
+          label={t("set.confirmDelete")}
+          description={t("set.confirmDeleteDesc")}
           checked={settings.confirmDelete}
           onChange={(v) => updateSettings({ confirmDelete: v })}
         />
         <Toggle
-          label="Pause others automatically"
-          description="Starting a timer offers to pause the running one instead of blocking it."
+          label={t("set.autoPause")}
+          description={t("set.autoPauseDesc")}
           checked={settings.autoPauseOthers}
           onChange={(v) => updateSettings({ autoPauseOthers: v })}
         />
         <Toggle
-          label="Browser notifications"
-          description="Optional goal notifications. Off until you grant permission."
+          label={t("set.notifications")}
+          description={t("set.notificationsDesc")}
           checked={settings.notifications}
           onChange={(v) => (v ? requestNotifications() : updateSettings({ notifications: false }))}
         />
       </Section>
 
-      <Section title="Keyboard shortcuts">
+      <Section title={t("set.shortcuts")}>
         <ul className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
           <li>
-            <Kbd>Space</Kbd> pause / resume
+            <Kbd>Space</Kbd> {t("set.scSpace")}
           </li>
           <li>
-            <Kbd>N</Kbd> new timer
+            <Kbd>N</Kbd> {t("set.scN")}
           </li>
           <li>
-            <Kbd>R</Kbd> reset active timer
+            <Kbd>R</Kbd> {t("set.scR")}
           </li>
           <li>
-            <Kbd>Esc</Kbd> close dialogs
+            <Kbd>Esc</Kbd> {t("set.scEsc")}
           </li>
         </ul>
       </Section>
 
-      <Section title="Data">
+      <Section title={t("set.data")}>
         <Row
-          label="Export"
-          description={`${sessions.length} sessions · ${formatDuration(sumDuration(sessions))} recorded.`}
+          label={t("set.export")}
+          description={`${n(sessions.length)} ${t("label.sessions")} · ${formatDur(sumDuration(sessions))} ${t("set.recorded")}`}
         >
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => exportData("json")}>
-              Export JSON
+              {t("set.exportJson")}
             </Button>
             <Button variant="outline" size="sm" onClick={() => exportData("csv")}>
-              Export CSV
+              {t("set.exportCsv")}
             </Button>
           </div>
         </Row>
-        <Row label="Import" description="Restore from a previous JSON export.">
+        <Row label={t("set.import")} description={t("set.importDesc")}>
           <>
             <input
               ref={fileRef}
@@ -265,13 +287,13 @@ function SettingsPage() {
               }}
             />
             <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-              Import JSON
+              {t("set.importJson")}
             </Button>
           </>
         </Row>
-        <Row label="Clear all data" description="Removes every timer and session permanently.">
+        <Row label={t("set.clear")} description={t("set.clearDesc")}>
           <Button variant="destructive" size="sm" onClick={() => setClearOpen(true)}>
-            Clear all data
+            {t("set.clear")}
           </Button>
         </Row>
       </Section>
@@ -279,22 +301,23 @@ function SettingsPage() {
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Clear all study data?</AlertDialogTitle>
+            <AlertDialogTitle>{t("set.clearTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This deletes {timers.length} timers and {sessions.length} recorded sessions. Export
-              first if you want a copy — this cannot be undone.
+              {t("set.clearBody")
+                .replace("{t}", n(timers.length))
+                .replace("{s}", n(sessions.length))}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("action.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
                 clearAll();
-                toast.success("All data cleared");
+                toast.success(t("set.cleared"));
               }}
             >
-              Delete everything
+              {t("set.deleteEverything")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
