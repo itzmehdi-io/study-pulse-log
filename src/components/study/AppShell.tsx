@@ -99,15 +99,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const resumeCandidate = timers.find((t) => !t.archived);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="relative flex min-h-screen bg-background">
+      {/* Ambient cinematic backdrop */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="ambient animate-drift absolute inset-[-20%]" />
+        <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,transparent,var(--color-background)_78%)]" />
+      </div>
+
       <aside
         className={cn(
-          "sticky top-0 hidden h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-300 md:flex",
+          "sticky top-0 z-20 hidden h-screen shrink-0 flex-col border-e border-sidebar-border bg-sidebar/70 backdrop-blur-2xl transition-[width] duration-300 md:flex",
           collapsed ? "w-[74px]" : "w-60",
         )}
       >
-        <div className="flex h-16 items-center gap-2 px-4">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary">
+        <div className="flex h-16 items-center gap-2.5 px-4">
+          <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
             <Focus className="size-4" />
           </span>
           {!collapsed ? (
@@ -129,14 +135,26 @@ export function AppShell({ children }: { children: ReactNode }) {
                   to={item.to}
                   title={t(item.label)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors",
+                    "group relative flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm transition-all duration-300",
                     isActive(item.to)
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                      ? "bg-sidebar-accent/80 text-sidebar-accent-foreground shadow-[inset_0_1px_0_0_var(--glass-border)]"
+                      : "text-muted-foreground hover:bg-sidebar-accent/45 hover:text-foreground",
                   )}
                 >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute inset-y-1.5 start-0 w-[3px] rounded-full bg-primary transition-all duration-300",
+                      isActive(item.to)
+                        ? "opacity-100 shadow-[0_0_12px_2px_color-mix(in_oklab,var(--color-primary)_60%,transparent)]"
+                        : "opacity-0",
+                    )}
+                  />
                   <item.icon
-                    className={cn("size-4 shrink-0", isActive(item.to) && "text-primary")}
+                    className={cn(
+                      "size-4 shrink-0 transition-transform duration-300 group-hover:scale-110",
+                      isActive(item.to) && "text-primary",
+                    )}
                   />
                   {!collapsed ? <span className="truncate">{t(item.label)}</span> : null}
                 </Link>
@@ -154,7 +172,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <ChevronLeft
               className={cn(
-                "size-4 transition-transform",
+                "size-4 transition-transform duration-300",
                 (collapsed ? lang !== "fa" : lang === "fa") && "rotate-180",
               )}
             />
@@ -163,10 +181,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl md:px-8">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-glass-border bg-background/70 px-4 backdrop-blur-2xl md:px-8">
           <div className="flex items-center gap-2 md:hidden">
-            <span className="grid size-8 place-items-center rounded-lg bg-primary/15 text-primary">
+            <span className="grid size-8 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
               <Focus className="size-4" />
             </span>
             <span className="text-sm font-semibold">{t("app.name")}</span>
@@ -190,7 +208,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Button
               variant="ghost"
               size="sm"
-              className="px-2 text-xs text-muted-foreground"
+              className="rounded-full border border-border/70 px-2.5 text-xs text-muted-foreground hover:text-foreground"
               onClick={() => setLang(lang === "fa" ? "en" : "fa")}
               aria-label={t("label.language")}
             >
@@ -202,19 +220,27 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-12">{children}</main>
+        <main key={pathname} className="page-enter min-w-0 flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-12">
+          {children}
+        </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-border bg-background/95 px-2 py-2 backdrop-blur-xl md:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-glass-border bg-background/80 px-2 py-2 backdrop-blur-2xl md:hidden">
           {MOBILE_NAV.map((item) => (
             <Link
               key={item.to}
               to={item.to}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 rounded-lg py-1.5 text-[10px]",
+                "relative flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 text-[10px] transition-colors duration-300",
                 isActive(item.to) ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <item.icon className="size-[18px]" />
+              {isActive(item.to) ? (
+                <span
+                  aria-hidden
+                  className="absolute -top-2 h-[3px] w-8 rounded-full bg-primary shadow-[0_0_12px_2px_color-mix(in_oklab,var(--color-primary)_55%,transparent)]"
+                />
+              ) : null}
+              <item.icon className={cn("size-[18px] transition-transform duration-300", isActive(item.to) && "scale-110")} />
               {t(item.label)}
             </Link>
           ))}
@@ -223,3 +249,4 @@ export function AppShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
