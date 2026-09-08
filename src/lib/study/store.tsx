@@ -9,11 +9,13 @@ import {
   type ReactNode,
 } from "react";
 
+import { dateKey } from "./format";
 import { splitByLocalDay } from "./stats";
 import {
   DEFAULT_SETTINGS,
   type AppSettings,
   type AppState,
+  type DayPlan,
   type RunState,
   type StudySession,
   type Timer,
@@ -31,6 +33,7 @@ const EMPTY_STATE: AppState = {
   sessions: [],
   settings: DEFAULT_SETTINGS,
   runStates: {},
+  plans: {},
 };
 
 function loadState(): AppState {
@@ -40,10 +43,12 @@ function loadState(): AppState {
     if (!raw) return EMPTY_STATE;
     const parsed = JSON.parse(raw) as Partial<AppState>;
     return {
-      timers: parsed.timers ?? [],
+      // Older saves have no timer type — treat them as plain study.
+      timers: (parsed.timers ?? []).map((t) => ({ ...t, type: t.type ?? "study" })),
       sessions: parsed.sessions ?? [],
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
       runStates: parsed.runStates ?? {},
+      plans: parsed.plans ?? {},
     };
   } catch {
     return EMPTY_STATE;
@@ -67,10 +72,17 @@ interface StoreValue extends AppState {
   pauseTimer: (id: string) => void;
   resetTimer: (id: string) => void;
   clearTimerHistory: (id: string) => void;
+  /** Correct a recorded session; re-splits at midnight and refreshes every aggregate. */
+  updateSession: (id: string, patch: { startedAt: number; endedAt: number; timerId?: string }) => void;
+  addSession: (input: { timerId: string; startedAt: number; endedAt: number }) => void;
+  deleteSession: (id: string) => void;
+  setPlan: (date: string, patch: Partial<Omit<DayPlan, "date" | "updatedAt">>) => void;
+  removePlan: (date: string) => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
   replaceAll: (state: Partial<AppState>) => void;
   clearAll: () => void;
 }
+
 
 const StoreContext = createContext<StoreValue | null>(null);
 

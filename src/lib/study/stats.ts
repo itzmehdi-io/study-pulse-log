@@ -1,11 +1,12 @@
 import { addDays, dateKey, startOfLocalDay, startOfWeek } from "./format";
-import type { StudySession, Timer } from "./types";
+import type { StudySession, Timer, TimerType } from "./types";
 
 /** Splits a raw study period into per-local-day sessions (handles midnight crossing). */
 export function splitByLocalDay(
   timerId: string,
   startedAt: number,
   endedAt: number,
+  meta?: { type?: TimerType; manual?: boolean; idSeed?: string },
 ): StudySession[] {
   const out: StudySession[] = [];
   let cursor = startedAt;
@@ -16,12 +17,14 @@ export function splitByLocalDay(
     const duration = segmentEnd - cursor;
     if (duration > 0) {
       out.push({
-        id: `${startedAt}-${i}-${Math.random().toString(36).slice(2, 8)}`,
+        id: `${meta?.idSeed ?? startedAt}-${i}-${Math.random().toString(36).slice(2, 8)}`,
         timerId,
         startedAt: cursor,
         endedAt: segmentEnd,
         duration,
         date: dateKey(cursor),
+        ...(meta?.type ? { type: meta.type } : {}),
+        ...(meta?.manual ? { manual: true } : {}),
       });
     }
     cursor = segmentEnd;
@@ -29,6 +32,7 @@ export function splitByLocalDay(
   }
   return out;
 }
+
 
 export function sumDuration(sessions: StudySession[]): number {
   return sessions.reduce((acc, s) => acc + s.duration, 0);
