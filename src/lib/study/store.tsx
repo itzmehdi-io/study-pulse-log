@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { dateKey } from "./format";
+
 import { splitByLocalDay } from "./stats";
 import {
   DEFAULT_SETTINGS,
@@ -330,7 +330,9 @@ export function StudyProvider({ children }: { children: ReactNode }) {
     const live: StudySession[] = [];
     for (const run of Object.values(state.runStates)) {
       if (run.startedAt !== null && now > run.startedAt) {
-        live.push(...splitByLocalDay(run.timerId, run.startedAt, now));
+        const type = state.timers.find((t) => t.id === run.timerId)?.type ?? "study";
+        live.push(...splitByLocalDay(run.timerId, run.startedAt, now, { type }));
+
       }
     }
     return [...state.sessions, ...live];
@@ -383,6 +385,12 @@ export function StudyProvider({ children }: { children: ReactNode }) {
     pauseTimer,
     resetTimer,
     clearTimerHistory,
+    updateSession,
+    addSession,
+    deleteSession,
+    setPlan,
+    removePlan,
+
     updateSettings,
     replaceAll,
     clearAll,
