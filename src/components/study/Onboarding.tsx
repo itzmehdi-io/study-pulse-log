@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/lib/i18n/provider";
 import { useStudy } from "@/lib/study/store";
 import { ACCENT_COLORS, TIMER_ICONS } from "@/lib/study/types";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ const GOALS = [60, 120, 240, 360, 480];
 
 export function Onboarding() {
   const { settings, hydrated, timers, updateSettings, createTimer } = useStudy();
+  const { t, n } = useI18n();
   const [step, setStep] = useState(0);
   const [goal, setGoal] = useState(settings.dailyGoalMinutes);
   const [name, setName] = useState("");
@@ -42,10 +44,9 @@ export function Onboarding() {
 
         {step === 0 ? (
           <div className="space-y-3 pt-4">
-            <h2 className="text-2xl font-semibold tracking-tight">Welcome to Focus Studio</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">{t("ob.welcome")}</h2>
             <p className="text-sm text-muted-foreground">
-              Track study time without getting distracted. Start a timer, study, and let your
-              history build itself.
+              {t("ob.welcomeBody")}
             </p>
           </div>
         ) : null}
@@ -53,8 +54,8 @@ export function Onboarding() {
         {step === 1 ? (
           <div className="space-y-4 pt-4">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Set your daily goal</h2>
-              <p className="mt-1 text-sm text-muted-foreground">You can change this any time.</p>
+              <h2 className="text-2xl font-semibold tracking-tight">{t("ob.goalTitle")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("ob.goalBody")}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {GOALS.map((g) => (
@@ -67,12 +68,12 @@ export function Onboarding() {
                     goal === g ? "border-primary/60 bg-primary/10 text-primary" : "text-muted-foreground",
                   )}
                 >
-                  {g / 60}h
+                  {n(g / 60)}
                 </button>
               ))}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="custom-goal">Custom (minutes)</Label>
+              <Label htmlFor="custom-goal">{t("ob.custom")}</Label>
               <Input
                 id="custom-goal"
                 type="number"
@@ -87,16 +88,16 @@ export function Onboarding() {
         {step === 2 ? (
           <div className="space-y-4 pt-4">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Create your first timer</h2>
+              <h2 className="text-2xl font-semibold tracking-tight">{t("ob.timerTitle")}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                One timer per subject or task works best.
+                {t("ob.timerBody")}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="first-timer">Timer name</Label>
+              <Label htmlFor="first-timer">{t("ob.timerName")}</Label>
               <Input
                 id="first-timer"
-                placeholder="e.g. Mathematics"
+                placeholder={t("ob.timerPlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -106,7 +107,7 @@ export function Onboarding() {
 
         <div className="flex items-center justify-between pt-2">
           <Button variant="ghost" size="sm" onClick={() => updateSettings({ onboarded: true })}>
-            Skip
+            {t("ob.skip")}
           </Button>
           <div className="flex items-center gap-2">
             <div className="mr-2 flex gap-1.5">
@@ -118,9 +119,9 @@ export function Onboarding() {
               ))}
             </div>
             {step < 2 ? (
-              <Button onClick={() => setStep((s) => s + 1)}>Continue</Button>
+              <Button onClick={() => setStep((s) => s + 1)}>{t("ob.continue")}</Button>
             ) : (
-              <Button onClick={finish}>Start studying</Button>
+              <Button onClick={finish}>{t("ob.start")}</Button>
             )}
           </div>
         </div>
