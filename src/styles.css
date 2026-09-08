@@ -328,6 +328,36 @@
   }
 }
 
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -1.5%, 0) scale(1.04);
+  }
+}
+
+@keyframes dash-draw {
+  from {
+    stroke-dashoffset: var(--dash-from, 320);
+  }
+  to {
+    stroke-dashoffset: var(--dash-to, 0);
+  }
+}
+
 .animate-pulse-ring {
   animation: pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -337,12 +367,26 @@
 }
 
 .animate-float-in {
-  animation: float-in 0.34s var(--ease-calm) both;
+  animation: float-in 0.38s var(--ease-spring) both;
 }
 
 .animate-breathe {
   animation: breathe 4.2s var(--ease-calm) infinite;
 }
+
+.animate-drift {
+  animation: drift 22s ease-in-out infinite;
+}
+
+.animate-dash-draw {
+  animation: dash-draw 1.1s var(--ease-calm) both;
+}
+
+/* Route-level transition applied on pathname change. */
+.page-enter {
+  animation: page-enter 0.34s var(--ease-calm) both;
+}
+
 
 /* Staggered entrance for grids and lists. */
 .stagger > * {
